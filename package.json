@@ -36,6 +36,8 @@
 		"vite": "^6.0.0"
 	},
 	"dependencies": {
-		"is-project-2": "file:"
+		"is-project-2": "file:",
+		"natural": "^8.0.1",
+		"string-similarity": "^4.0.4"
 	}
 }

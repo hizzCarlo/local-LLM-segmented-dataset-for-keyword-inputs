@@ -1,6 +1,8 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import * as segments from '$lib/data/segments';
 import type { DataSegment } from '$lib/types';
+import natural from 'natural';
+import { SYNONYMS } from '$lib/data/synonyms';
 
 
 const KEYWORD_MAP = {
@@ -68,18 +70,159 @@ const DATA_SEGMENTS: DataSegment[] = [
     }
 ];
 
+
+const tokenizer = new natural.WordTokenizer();
+const lemmatizer = natural.LancasterStemmer;
+
+
+function levenshteinDistance(a: string, b: string): number {
+    const matrix: number[][] = [];
+
+    
+    for (let i = 0; i <= b.length; i++) {
+        matrix[i] = [i];
+    }
+    for (let j = 0; j <= a.length; j++) {
+        matrix[0][j] = j;
+    }
+
+   
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            const cost = a[j - 1] === b[i - 1] ? 0 : 1;
+            matrix[i][j] = Math.min(
+                matrix[i - 1][j] + 1,      // deletion
+                matrix[i][j - 1] + 1,      // insertion
+                matrix[i - 1][j - 1] + cost // substitution
+            );
+        }
+    }
+
+    return matrix[b.length][a.length];
+}
+
+// Calculate similarity score (0-1) based on Levenshtein distance
+function stringSimilarity(a: string, b: string): number {
+    if (a.length === 0 || b.length === 0) return 0;
+    const distance = levenshteinDistance(a, b);
+    const maxLength = Math.max(a.length, b.length);
+    return 1 - distance / maxLength;
+}
+
+function tokenizeAndLemmatize(text: string): string[] {
+    const tokens = tokenizer.tokenize(text) || [];
+    return tokens.map(token => lemmatizer.stem(token.toLowerCase()));
+}
+
+function findSimilarKeywords(input: string, keywords: string[]): string[] {
+    const inputTokens = tokenizeAndLemmatize(input);
+    const matches = new Set<string>();
+
+    // Expand input tokens with synonyms
+    const expandedInputTokens = [...inputTokens];
+    inputTokens.forEach(token => {
+        // Check if the token is a synonym of any word in our dictionary
+        Object.entries(SYNONYMS).forEach(([word, synonyms]) => {
+            if (synonyms.some(synonym => 
+                stringSimilarity(token, synonym) > 0.8 || 
+                token.includes(synonym) || 
+                synonym.includes(token)
+            )) {
+                expandedInputTokens.push(word);
+            }
+        });
+    });
+
+    // Direct matching with lemmatization using expanded tokens
+    keywords.forEach(keyword => {
+        const keywordTokens = tokenizeAndLemmatize(keyword);
+        
+       
+        if (expandedInputTokens.some(inputToken => 
+            keywordTokens.some(keywordToken => 
+              
+                inputToken === keywordToken || 
+                stringSimilarity(inputToken, keywordToken) > 0.8
+            )
+        )) {
+            matches.add(keyword);
+        }
+    });
+
+    // Fuzzy matching for multi-word keywords
+    keywords.forEach(keyword => {
+        
+        const keywordSynonyms = Object.entries(SYNONYMS)
+            .filter(([word]) => keyword.includes(word))
+            .flatMap(([, synonyms]) => synonyms);
+        
+      
+        const similarity = stringSimilarity(input.toLowerCase(), keyword.toLowerCase());
+        if (similarity > 0.8) {
+            matches.add(keyword);
+        }
+        
+   
+        keywordSynonyms.forEach(synonym => {
+            const synSimilarity = stringSimilarity(input.toLowerCase(), synonym.toLowerCase());
+            if (synSimilarity > 0.8) {
+                matches.add(keyword);
+            }
+        });
+    });
+
+    return Array.from(matches);
+}
+
 export const POST: RequestHandler = async ({ request }) => {
     try {
         const { message, model } = await request.json();
         const lowercaseMessage = message.toLowerCase();
         
-        // Check for matching keywords and get their categories
-        const matchedCategories = Object.entries(KEYWORD_MAP)
-            .filter(([keyword]) => lowercaseMessage.includes(keyword))
-            .map(([, category]) => category);
+    
+        const allKeywords = Object.keys(KEYWORD_MAP);
+        
+     
+        const similarKeywords = findSimilarKeywords(lowercaseMessage, allKeywords);
+        
+      
+        const matchedCategories = similarKeywords
+            .map(keyword => KEYWORD_MAP[keyword as keyof typeof KEYWORD_MAP])
+            .filter((category): category is string => category !== undefined);
 
-        // If no keywords matched, return general response
-        if (matchedCategories.length === 0) {
+      
+        const uniqueCategories = Array.from(new Set(matchedCategories));
+        
+       
+        if (uniqueCategories.length === 0) {
+           
+            const allSegmentKeywords: string[] = [];
+            DATA_SEGMENTS.forEach(segment => {
+                allSegmentKeywords.push(...segment.keywords);
+            });
+            
+           
+            const similarSegmentKeywords = findSimilarKeywords(lowercaseMessage, allSegmentKeywords);
+            
+       
+            similarSegmentKeywords.forEach(keyword => {
+                DATA_SEGMENTS.forEach(segment => {
+                    if (segment.keywords.includes(keyword)) {
+                        const category = KEYWORD_MAP[segment.keywords[0] as keyof typeof KEYWORD_MAP];
+                        if (category) {
+                            uniqueCategories.push(category);
+                        }
+                    }
+                });
+            });
+        }
+        
+        console.log('User message:', message);
+        console.log('Matched keywords:', similarKeywords);
+        console.log('Matched categories:', Array.from(new Set(uniqueCategories)));
+
+ 
+        if (uniqueCategories.length === 0) {
             const response = await fetch('http://localhost:11434/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -98,12 +241,11 @@ export const POST: RequestHandler = async ({ request }) => {
             });
         }
 
-        // Get only the relevant segments based on matched categories
-        const relevantSegments = DATA_SEGMENTS.filter(segment =>
-            matchedCategories.includes(
-                KEYWORD_MAP[segment.keywords[0] as keyof typeof KEYWORD_MAP]
-            )
-        );
+       
+        const relevantSegments = DATA_SEGMENTS.filter(segment => {
+            const segmentCategory = KEYWORD_MAP[segment.keywords[0] as keyof typeof KEYWORD_MAP];
+            return uniqueCategories.includes(segmentCategory);
+        });
 
         const context = relevantSegments
             .map(segment => `${segment.contextPrompt}\n${JSON.stringify(segment.data, null, 2)}`)

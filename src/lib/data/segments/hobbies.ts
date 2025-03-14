@@ -15,4 +15,21 @@ export const HOBBIES_DATA = {
     ]
 };
 
-export const HOBBIES_KEYWORDS = ['hobbies', 'interests', 'art', 'gaming', 'writing', 'digital art', 'animation']; 
+export const HOBBIES_KEYWORDS = [
+    'hobbies', 
+    'interests', 
+    'art', 
+    'gaming', 
+    'writing', 
+    'digital art', 
+    'animation',
+    'hobby',
+    'game',
+    'draw',
+    'drawing',
+    'leisure',
+    'pastime',
+    'recreation',
+    'fun',
+    'entertainment'
+]; 

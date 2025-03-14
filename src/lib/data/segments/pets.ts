@@ -22,4 +22,15 @@ export const PETS_DATA = {
     ] as Pet[]
 };
 
-export const PETS_KEYWORDS = ['pets', 'dogs', 'jake', 'finn', 'animal']; 
+export const PETS_KEYWORDS = [
+    'pets', 
+    'dogs', 
+    'jake', 
+    'finn', 
+    'animal',
+    'dog',
+    'pet',
+    'companion animal',
+    'furry friend',
+    'puppy'
+]; 

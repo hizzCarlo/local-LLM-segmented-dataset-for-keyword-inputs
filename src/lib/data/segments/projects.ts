@@ -19,4 +19,20 @@ export const PROJECTS_DATA = {
     ]
 };
 
-export const PROJECTS_KEYWORDS = ['projects', 'thesis', 'work', 'portfolio', 'pokemon', 'pos', 'chatbot']; 
+export const PROJECTS_KEYWORDS = [
+    'projects', 
+    'thesis', 
+    'work', 
+    'portfolio', 
+    'pokemon', 
+    'pos', 
+    'chatbot',
+    'project',
+    'works',
+    'creation',
+    'development',
+    'application',
+    'app',
+    'website',
+    'research'
+]; 

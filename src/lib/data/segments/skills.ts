@@ -15,4 +15,17 @@ export const SKILLS_DATA = {
     ]
 };
 
-export const SKILLS_KEYWORDS = ['skills', 'programming', 'development', 'coding', 'technologies', 'expertise']; 
+export const SKILLS_KEYWORDS = [
+    'skills', 
+    'programming', 
+    'development', 
+    'coding', 
+    'technologies', 
+    'expertise',
+    'develop',
+    'code',
+    'tech',
+    'program',
+    'engineer',
+    'software'
+]; 

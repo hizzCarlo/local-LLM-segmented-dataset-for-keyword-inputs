@@ -6,4 +6,20 @@ export const EDUCATION_DATA = {
     interests: ['Natural Language Processing (NLP)', 'Software Development', 'Web Development']
 };
 
-export const EDUCATION_KEYWORDS = ['education', 'college', 'gordon', 'student', 'study', 'academic', 'nlp']; 
+export const EDUCATION_KEYWORDS = [
+    'education', 
+    'college', 
+    'gordon', 
+    'student', 
+    'study', 
+    'academic', 
+    'nlp',
+    'school',
+    'university',
+    'degree',
+    'course',
+    'learning',
+    'studies',
+    'major',
+    'academic background'
+]; 
