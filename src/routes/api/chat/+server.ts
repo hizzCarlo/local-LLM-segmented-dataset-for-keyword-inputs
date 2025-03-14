@@ -70,7 +70,7 @@ const DATA_SEGMENTS: DataSegment[] = [
 
 export const POST: RequestHandler = async ({ request }) => {
     try {
-        const { message } = await request.json();
+        const { message, model } = await request.json();
         const lowercaseMessage = message.toLowerCase();
         
         // Check for matching keywords and get their categories
@@ -84,7 +84,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: 'deepseek-r1:1.5b',
+                    model: model,
                     prompt: `User: ${message}\nAssistant: Let me provide a general response.`,
                     stream: false
                 })
@@ -115,7 +115,7 @@ export const POST: RequestHandler = async ({ request }) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: 'deepseek-r1:1.5b',
+                model: model,
                 prompt: prompt,
                 stream: false
             })
