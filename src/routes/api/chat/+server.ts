@@ -2,39 +2,33 @@ import type { RequestHandler } from '@sveltejs/kit';
 import * as segments from '$lib/data/segments';
 import type { DataSegment } from '$lib/types';
 
-// Keyword map for direct segment lookup
+
 const KEYWORD_MAP = {
-    // Personal
     'john carlo': 'personal',
     'hizola': 'personal',
     'creator': 'personal',
     'favorite color': 'personal',
 
-    // Pets
     'pets': 'pets',
     'dogs': 'pets',
     'jake': 'pets',
     'finn': 'pets',
 
-    // Education
     'education': 'education',
     'college': 'education',
     'gordon': 'education',
     'student': 'education',
 
-    // Projects
     'projects': 'projects',
     'thesis': 'projects',
     'pokemon': 'projects',
     'pos': 'projects',
 
-    // Skills
     'skills': 'skills',
     'programming': 'skills',
     'coding': 'skills',
     'development': 'skills',
 
-    // Hobbies
     'hobbies': 'hobbies',
     'interests': 'hobbies',
     'gaming': 'hobbies',
